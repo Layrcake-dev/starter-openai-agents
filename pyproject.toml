@@ -1,0 +1,43 @@
+[project]
+name = "starter-openai-agents"
+version = "1.0.0"
+description = "An OpenAI Agents SDK starter that finds people, verifies their work emails with Layrcake and drafts a campaign that waits for a person to approve."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+dependencies = [
+    "openai-agents>=0.24.0",
+    "layrcake>=0.1.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1",
+    "pytest-asyncio>=1.4",
+    "ruff>=0.17",
+    "mypy>=2.4",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-ra --strict-markers"
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+files = ["agent.py", "instructions.py", "layrcake_tools.py", "smoke.py", "tests"]
+plugins = ["pydantic.mypy"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "C4", "PT", "RET"]
+ignore = ["UP045", "UP007"]  # keep Optional[...] so pydantic and the Agents SDK read the same types on 3.10
