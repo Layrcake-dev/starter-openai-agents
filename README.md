@@ -86,12 +86,12 @@ Brief: Find 10 heads of sales at software companies in London ...
 -> create_campaign
 -> launch_campaign
 
-Found 10 people. Kept 8 verified emails (2 catch-all).
-Layrcake credits spent: 64.5 of 100.
+Found 10 people. Kept 7 verified emails (3 catch-all).
+Layrcake credits spent: 46.75 of 100.
 Nothing has been sent. A person approves or declines here: <approval link>
 ```
 
-The numbers above show the format. Your run will differ. A dry run ends with the model's cost estimate instead of a link.
+These numbers are from our test run of the default brief on 20 October 2026. Your run will differ. A dry run ends with the model's cost estimate instead of a link.
 
 ## How approval works
 
@@ -101,11 +101,24 @@ A signed-in person in your workspace opens the link, reads the preview and appro
 
 ## Cost
 
-A run like this usually costs 50 to 70 Layrcake credits; set BUDGET. A credit is $0.01. Finding people costs 0.25 credits each, an email costs 5 credits when found, a verification costs 1.25, and lookups that find nothing are free. Drafting the campaign is free. See [pricing](https://docs.layrcake.dev/pricing.html).
+Our test runs of the default brief cost 45.5 to 53 Layrcake credits. A credit is $0.01. Finding people costs 0.25 credits each, an email costs 5 credits when found, a verification costs 1.25, and lookups that find nothing are free. Drafting the campaign is free. See [pricing](https://docs.layrcake.dev/pricing.html).
 
 `BUDGET` in `.env` is the ceiling for the whole run (default 100). Model usage is billed separately by OpenAI. Set `MODEL` to change the model. Without it, the agent uses the Agents SDK default (`gpt-5.6-luna` in openai-agents 0.24).
 
 The Agents SDK sends traces of each run to your OpenAI dashboard, including tool results such as names and emails. Set `OPENAI_AGENTS_DISABLE_TRACING=1` to turn that off.
+
+## Using OpenRouter
+
+The kit runs unchanged through [OpenRouter](https://openrouter.ai). Put these in `.env` instead of a direct model key:
+
+```text
+OPENAI_BASE_URL=https://openrouter.ai/api/v1
+OPENAI_API_KEY=<your OpenRouter key>
+OPENAI_AGENTS_DISABLE_TRACING=1
+MODEL=openai/gpt-5.6-luna
+```
+
+We ran this kit this way on 20 October 2026.
 
 ## Project layout
 
