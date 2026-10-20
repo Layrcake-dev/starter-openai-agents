@@ -822,14 +822,19 @@ wheels = [
 
 [[package]]
 name = "layrcake"
-version = "0.1.0"
+version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5a/3d/765788461a7726232e21fbe2254922211cff0b376a3a1f45d7bd34b2001b/layrcake-0.1.0.tar.gz", hash = "sha256:d2c58be19e2ad3aebd4dba88175ed6a471a647dec07af75712d634d11bbc34f9", size = 115602, upload-time = "2026-10-19T00:44:32.908Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/46/7c/20e7de2c12d22944a4c95ff08b7165816d8368c7f153d2038b85d40dee2c/layrcake-0.2.0.tar.gz", hash = "sha256:799960427b3645e862641c0db50119d6ba4b0bc63fc2e899a88ab087a24bcc53", size = 130096, upload-time = "2026-10-20T18:14:54.745Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/58/4b/3ec9566675d207df64249f7685c01b75ff0b13ecc5982dd4116156b7b3ca/layrcake-0.1.0-py3-none-any.whl", hash = "sha256:c9ed8e8ba7b223d24dd6a8a3ad33a3726fb3af0c7b70dc35c63554c39bb4b631", size = 67835, upload-time = "2026-10-19T00:44:31.457Z" },
+    { url = "https://files.pythonhosted.org/packages/a0/94/92a96d8a28cb69a556b554c13fe259b65b0a6c7e354d93d0a81a7028b2d1/layrcake-0.2.0-py3-none-any.whl", hash = "sha256:e30e3f359a8da4a3a928778e51f45a17dd8078fda472a05888baae99f241f88e", size = 77654, upload-time = "2026-10-20T18:14:53.519Z" },
+]
+
+[package.optional-dependencies]
+agents = [
+    { name = "pydantic" },
 ]
 
 [[package]]
@@ -1810,7 +1815,7 @@ name = "starter-openai-agents"
 version = "1.0.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "layrcake" },
+    { name = "layrcake", extra = ["agents"] },
     { name = "openai-agents" },
 ]
 
@@ -1824,7 +1829,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "layrcake", specifier = ">=0.1.0" },
+    { name = "layrcake", extras = ["agents"], specifier = ">=0.2.0" },
     { name = "openai-agents", specifier = ">=0.24.0" },
 ]
 

@@ -5,22 +5,24 @@ from __future__ import annotations
 import argparse
 import asyncio
 import os
-import uuid
 from decimal import Decimal
 from typing import Any, Optional
 
 from agents import Agent, ModelSettings, RunContextWrapper, RunHooks, Runner, Tool
 from agents.agent import StopAtTools
 from layrcake import AsyncLayrcake
+from layrcake.agent_tools import AsyncLayrcakeSession
 
 from instructions import DEFAULT_BRIEF, instructions
-from layrcake_tools import TOOLS, Run
+from layrcake_tools import TOOLS
 
 
-def build_agent(budget: Decimal, dry_run: bool, model: Optional[str] = None) -> Agent[Run]:
-    return Agent[Run](
+def build_agent(
+    budget: Decimal, dry_run: bool, model: Optional[str] = None, sender_name: Optional[str] = None
+) -> Agent[AsyncLayrcakeSession]:
+    return Agent[AsyncLayrcakeSession](
         name="Layrcake prospector",
-        instructions=instructions(budget, dry_run),
+        instructions=instructions(budget, dry_run, sender_name),
         model=model,  # None uses the Agents SDK default
         tools=list(TOOLS),
         tool_use_behavior=StopAtTools(stop_at_tool_names=["launch_campaign"]),  # stop at the approval link
@@ -28,8 +30,10 @@ def build_agent(budget: Decimal, dry_run: bool, model: Optional[str] = None) -> 
     )
 
 
-class PrintToolCalls(RunHooks[Run]):
-    async def on_tool_start(self, context: RunContextWrapper[Run], agent: Agent[Any], tool: Tool) -> None:
+class PrintToolCalls(RunHooks[AsyncLayrcakeSession]):
+    async def on_tool_start(
+        self, context: RunContextWrapper[AsyncLayrcakeSession], agent: Agent[Any], tool: Tool
+    ) -> None:
         print(f"-> {tool.name}")
 
 
@@ -51,13 +55,13 @@ async def main() -> None:
         f"{'Dry run, nothing is charged' if args.dry_run else 'Live run'}. Budget: {budget} credits.\nBrief: {brief}\n"
     )
     async with AsyncLayrcake() as client:  # reads LAYRCAKE_API_KEY
-        run = Run(client=client, budget=budget, dry_run=args.dry_run, run_id=uuid.uuid4().hex)
-        agent = build_agent(budget, args.dry_run, os.environ.get("MODEL"))
+        run = AsyncLayrcakeSession(client, budget_credits=budget, dry_run=args.dry_run)
+        agent = build_agent(budget, args.dry_run, os.environ.get("MODEL"), os.environ.get("SENDER_NAME"))
         result = await Runner.run(agent, brief, context=run, max_turns=40, hooks=PrintToolCalls())
 
     if not run.approval_url and not run.launch_error:
         print(f"\n{result.final_output}")
-    print(f"\nFound {run.found} people. Kept {run.kept} verified emails ({run.catch_all} catch-all).")
+    print(f"\nFound {run.found} people. Kept {len(run.verified)} verified emails ({len(run.catch_all)} catch-all).")
     print(f"Layrcake credits spent: {run.spent} of {budget}.")
     if run.approval_url:
         print(f"Nothing has been sent. A person approves or declines here: {run.approval_url}")

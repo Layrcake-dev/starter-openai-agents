@@ -3,16 +3,19 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Optional
 
+import pytest
 from agents import Runner
 from agents.testing import ScriptedModel, assistant_message, function_call
+from layrcake.agent_tools import AsyncLayrcakeSession
 
 from agent import build_agent
-from layrcake_tools import Run
+from instructions import instructions
 from tests.conftest import APPROVAL_URL, CAMPAIGN_ID, MockLayrcake
 
 
-async def test_agent_stops_at_the_approval_link(run: Run, api: MockLayrcake) -> None:
+async def test_agent_stops_at_the_approval_link(run: AsyncLayrcakeSession, api: MockLayrcake) -> None:
     lead = {"email": "ada@acme.com", "first_name": "Ada", "company_name": "Acme"}
     model = ScriptedModel(
         [
@@ -43,3 +46,24 @@ async def test_agent_stops_at_the_approval_link(run: Run, api: MockLayrcake) -> 
     assert model.remaining_steps == 1  # the loop stopped at launch_campaign
     assert run.spent == Decimal("9.25")
     assert "confirmation_token" not in api.requests[-1][1]
+
+
+def test_the_agent_signs_with_sender_name() -> None:
+    agent = build_agent(Decimal(100), dry_run=False, sender_name="Sam Carter")
+
+    assert isinstance(agent.instructions, str)
+    assert "End every email with this sign-off line, exactly as written: Sam Carter\n" in agent.instructions
+    assert "never invent a name, title or company for the sender" in agent.instructions
+    assert "[Your name]" not in agent.instructions
+
+
+@pytest.mark.parametrize("sender_name", [None, "", "   "])
+def test_without_sender_name_emails_are_signed_your_name(sender_name: Optional[str]) -> None:
+    prompt = instructions(Decimal(100), dry_run=False, sender_name=sender_name)
+
+    assert "End every email with this sign-off line, exactly as written: [Your name]\n" in prompt
+    assert "never invent a name, title or company for the sender" in prompt
+    assert prompt.endswith(
+        "Also say that every email is signed [Your name] and the sign-off must be filled in before the campaign\n"
+        "is approved."
+    )

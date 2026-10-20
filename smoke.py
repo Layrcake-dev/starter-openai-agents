@@ -8,20 +8,20 @@ from __future__ import annotations
 import asyncio
 import json
 import os
-import uuid
-from decimal import Decimal
 from typing import Any
 
 from agents.tool import FunctionTool
 from agents.tool_context import ToolContext
 from layrcake import AsyncLayrcake
+from layrcake.agent_tools import AsyncLayrcakeSession
 
-from layrcake_tools import Run, create_campaign, enrich, find_leads, verify_email
+from layrcake_tools import TOOLS
 
 SAMPLE = {"email": "sample.person@example.com", "first_name": "Sample"}
+TOOL = {tool.name: tool for tool in TOOLS}
 CALLS: list[tuple[FunctionTool, dict[str, Any]]] = [
     (
-        find_leads,
+        TOOL["find_leads"],
         {
             "audience": "Heads of sales at London software companies with 20 to 200 staff",
             "titles": ["Head of Sales"],
@@ -31,16 +31,16 @@ CALLS: list[tuple[FunctionTool, dict[str, Any]]] = [
             "limit": 10,
         },
     ),
-    (enrich, {"full_name": "Sample Person", "company_domain": "example.com"}),
-    (verify_email, {"email": SAMPLE["email"]}),
+    (TOOL["enrich"], {"full_name": "Sample Person", "company_domain": "example.com"}),
+    (TOOL["verify_email"], {"email": SAMPLE["email"]}),
     (
-        create_campaign,
+        TOOL["create_campaign"],
         {"name": "Smoke test", "leads": [SAMPLE], "steps": [{"subject": "Hello", "body": "Hi {{first_name}}"}]},
     ),
 ]
 
 
-async def call(tool: FunctionTool, run: Run, args: dict[str, Any]) -> Any:
+async def call(tool: FunctionTool, run: AsyncLayrcakeSession, args: dict[str, Any]) -> Any:
     """Invoke a tool exactly as the agent loop does, from JSON arguments."""
     arguments = json.dumps(args)
     ctx = ToolContext(context=run, tool_name=tool.name, tool_call_id="smoke", tool_arguments=arguments)
@@ -55,7 +55,7 @@ async def main() -> None:
     async with AsyncLayrcake() as client:  # reads LAYRCAKE_API_KEY
         me = await client.get_me()
         print(f'Key works for workspace "{me.result["workspace"]["name"]}".')
-        run = Run(client=client, budget=Decimal(os.environ.get("BUDGET", "100")), dry_run=True, run_id=uuid.uuid4().hex)
+        run = AsyncLayrcakeSession(client, budget_credits=os.environ.get("BUDGET", "100"), dry_run=True)
         for tool, args in CALLS:
             plan = await call(tool, run, args)
             if not plan.get("dry_run"):

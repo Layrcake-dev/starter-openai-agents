@@ -14,13 +14,13 @@ It uses the [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) 
 
 ## Why the SDK for this kit
 
-The Agents SDK builds a tool from a typed Python function and its docstring with `@function_tool`. Wrapping the `layrcake` SDK in five such functions fits that model:
+The tools and their rules come from the `layrcake` SDK's `layrcake.agent_tools` module, the same code behind the LangChain, LlamaIndex and CrewAI packages. `layrcake_tools.py` hands five of them to the Agents SDK as `FunctionTool`s:
 
-- Each tool takes only the arguments this agent needs. `launch_campaign` has no `confirmation_token` argument, so the model cannot approve anything.
-- The run state travels in the run context (`RunContextWrapper[Run]`): the Layrcake client, the budget, what was spent, and which emails passed verification. The rules live in `layrcake_tools.py`. Every paid call gets `budget_credits` set to what is left of `BUDGET`. `--dry-run` adds `dry_run: true` to every call. `create_campaign` refuses any address that did not pass `verify_email` in this run.
-- `StopAtTools(stop_at_tool_names=["launch_campaign"])` ends the run at the approval link. `parallel_tool_calls=False` and a lock run one Layrcake call at a time, so the running total is exact.
-- A custom `failure_error_function` shows the model why a call was refused, such as a spent budget. The SDK's default hides the reason.
-- The SDK handles retries, typed errors and idempotency keys. The tools pass a key derived from the call, so a repeated call returns the first result instead of charging again. Credits are `Decimal`, never floats.
+- Each tool's name, description with its price, and strict JSON schema come from the SDK. `launch_campaign` has no `confirmation_token` argument, so the model cannot approve anything, and the token is removed from what the model reads.
+- The run state travels in the run context (`RunContextWrapper[AsyncLayrcakeSession]`): the Layrcake client, the budget, what was spent, and which emails passed verification. Every paid call gets `budget_credits` set to what is left of `BUDGET`. `--dry-run` adds `dry_run: true` to every call. `create_campaign` refuses any address that did not pass `verify_email` in this run.
+- `StopAtTools(stop_at_tool_names=["launch_campaign"])` ends the run at the approval link. `parallel_tool_calls=False` and the session's lock run one Layrcake call at a time, so the running total is exact.
+- A refused call, such as one past the budget, comes back to the model as text that starts with `Refused:` and says why, so it can fix the call or stop.
+- The SDK handles retries, typed errors and idempotency keys. The session passes a key derived from the call, so a repeated call returns the first result instead of charging again. Credits are `Decimal`, never floats.
 
 The hosted MCP server at `https://mcp.layrcake.dev/mcp` also works with the Agents SDK through `MCPServerStreamableHttp`. Function tools keep the schemas small and the guardrails in your code.
 
@@ -55,6 +55,8 @@ Charged: 0 credits. Your key and the Layrcake API work.
 
 If `create_campaign` says it `would trip: sending_capacity`, connect mailboxes in the [Layrcake console](https://app.layrcake.dev) before a live run.
 
+Set `SENDER_NAME` in `.env` to the name your emails are signed with. Without it, every draft is signed `[Your name]` and the report reminds you to fill it in before you approve.
+
 ## Run
 
 Start with a dry run. Every Layrcake call returns a plan with its cost instead of data, so it is free. It still uses your OpenAI key.
@@ -76,22 +78,25 @@ With no brief, it uses the one above.
 Each tool call prints as it starts. The run ends with a short report from the run state:
 
 ```text
-Live run. Budget: 100 credits.
-Brief: Find 10 heads of sales at software companies in London ...
+Live run. Budget: 25 credits.
+Brief: Find 3 heads of sales at software companies in London with 20 to 200 staff, verify their work emails, and draft a short campaign about cutting time spent on lead research.
 
 -> find_leads
 -> enrich
+-> enrich
+-> enrich
 -> verify_email
-...
+-> verify_email
+-> verify_email
 -> create_campaign
 -> launch_campaign
 
-Found 10 people. Kept 7 verified emails (3 catch-all).
-Layrcake credits spent: 46.75 of 100.
+Found 10 people. Kept 3 verified emails (1 catch-all).
+Layrcake credits spent: 21.75 of 25.
 Nothing has been sent. A person approves or declines here: <approval link>
 ```
 
-These numbers are from our test run of the default brief on 20 October 2026. Your run will differ. A dry run ends with the model's cost estimate instead of a link.
+This is our test run on 20 October 2026, with `BUDGET=25`, the three-person brief above and `openai/gpt-5.6-luna` through OpenRouter. It took 40 seconds. The search returned 10 people and the agent enriched the 3 the brief asked for. Your run will differ. A dry run ends with the model's cost estimate instead of a link.
 
 ## How approval works
 
@@ -124,7 +129,7 @@ We ran this kit this way on 20 October 2026.
 
 ```text
 agent.py              the agent: model settings, stop rule, report
-layrcake_tools.py     the five Layrcake tools and the run state
+layrcake_tools.py     the five Layrcake tools, from layrcake.agent_tools
 instructions.py       the system prompt
 smoke.py              free setup check, no model call
 tests/test_tools.py   tool tests with a mocked Layrcake API
@@ -140,7 +145,7 @@ uv run mypy
 uv run pytest
 ```
 
-The tests give the `layrcake` client an `httpx.MockTransport`, and drive the agent with the Agents SDK's `ScriptedModel`. They need no keys and make no network calls.
+The tests give the `layrcake` client an `httpx.MockTransport`, and drive the agent with the Agents SDK's `ScriptedModel`. They need no keys and make no network calls. The run rules themselves are tested in the SDK.
 
 ## Links
 
