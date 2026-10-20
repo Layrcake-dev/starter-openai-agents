@@ -823,32 +823,18 @@ wheels = [
 [[package]]
 name = "layrcake"
 version = "0.2.0"
-source = { editable = "../../layrcake-python" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/46/7c/20e7de2c12d22944a4c95ff08b7165816d8368c7f153d2038b85d40dee2c/layrcake-0.2.0.tar.gz", hash = "sha256:799960427b3645e862641c0db50119d6ba4b0bc63fc2e899a88ab087a24bcc53", size = 130096, upload-time = "2026-10-20T18:14:54.745Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a0/94/92a96d8a28cb69a556b554c13fe259b65b0a6c7e354d93d0a81a7028b2d1/layrcake-0.2.0-py3-none-any.whl", hash = "sha256:e30e3f359a8da4a3a928778e51f45a17dd8078fda472a05888baae99f241f88e", size = 77654, upload-time = "2026-10-20T18:14:53.519Z" },
 ]
 
 [package.optional-dependencies]
 agents = [
     { name = "pydantic" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "httpx", specifier = ">=0.23.0,<1" },
-    { name = "pydantic", marker = "extra == 'agents'", specifier = ">=2.7,<3" },
-]
-provides-extras = ["agents"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "mypy", specifier = ">=1.10" },
-    { name = "pydantic", specifier = ">=2.7,<3" },
-    { name = "pytest", specifier = ">=8" },
-    { name = "pytest-asyncio", specifier = ">=0.23" },
-    { name = "respx", specifier = ">=0.21" },
-    { name = "ruff", specifier = ">=0.6" },
-    { name = "twine", specifier = ">=5" },
 ]
 
 [[package]]
@@ -1843,7 +1829,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "layrcake", extras = ["agents"], editable = "../../layrcake-python" },
+    { name = "layrcake", extras = ["agents"], specifier = ">=0.2.0" },
     { name = "openai-agents", specifier = ">=0.24.0" },
 ]
 

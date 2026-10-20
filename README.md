@@ -147,8 +147,6 @@ uv run pytest
 
 The tests give the `layrcake` client an `httpx.MockTransport`, and drive the agent with the Agents SDK's `ScriptedModel`. They need no keys and make no network calls. The run rules themselves are tested in the SDK.
 
-Until `layrcake` 0.2.0 is on PyPI, `[tool.uv.sources]` in `pyproject.toml` installs the SDK from a local checkout of [layrcake-python](https://github.com/Layrcake-dev/layrcake-python) at `../../layrcake-python`. Delete that table and run `uv lock` before publishing.
-
 ## Links
 
 - Layrcake docs: [docs.layrcake.dev](https://docs.layrcake.dev)

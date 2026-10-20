@@ -41,11 +41,3 @@ target-version = "py310"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "C4", "PT", "RET"]
 ignore = ["UP045", "UP007"]  # keep Optional[...] so pydantic and the Agents SDK read the same types on 3.10
-
-# Local development only, until layrcake 0.2.0 (which adds layrcake.agent_tools) is on PyPI.
-# uv installs the SDK from the sibling checkout below and uv.lock records that path, so
-# `uv lock --check` and `uv sync --locked` match what was tested. pip ignores this table, and the
-# built package's metadata already requires the released SDK. Before publishing: release layrcake
-# 0.2.0, delete this table, run `uv lock`, and commit the new lock.
-[tool.uv.sources]
-layrcake = { path = "../../layrcake-python", editable = true }
