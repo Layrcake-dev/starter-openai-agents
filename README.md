@@ -55,6 +55,8 @@ Charged: 0 credits. Your key and the Layrcake API work.
 
 If `create_campaign` says it `would trip: sending_capacity`, connect mailboxes in the [Layrcake console](https://app.layrcake.dev) before a live run.
 
+Set `SENDER_NAME` in `.env` to the name your emails are signed with. Without it, every draft is signed `[Your name]` and the report reminds you to fill it in before you approve.
+
 ## Run
 
 Start with a dry run. Every Layrcake call returns a plan with its cost instead of data, so it is free. It still uses your OpenAI key.

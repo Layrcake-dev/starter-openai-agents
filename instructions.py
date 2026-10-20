@@ -1,5 +1,9 @@
 """The system prompt. The same words drive the TypeScript starters."""
 
+from __future__ import annotations
+
+from typing import Optional
+
 DEFAULT_BRIEF = (
     "Find 10 heads of sales at software companies in London with 20 to 200 staff "
     "and draft a short campaign about cutting time spent on lead research."
@@ -15,8 +19,17 @@ DRY_RUN_NOTE = """- This is a dry run. Every call returns a plan with the most i
 REPORT = """Finish with a short report: people found, emails kept, how many were catch-all, credits spent, and the
 approval link."""
 
+# The sign-off on every email when SENDER_NAME is not set. A person fills it in before approving.
+SIGN_OFF_PLACEHOLDER = "[Your name]"
 
-def instructions(budget: object, dry_run: bool) -> str:
+PLACEHOLDER_REPORT = f"""
+Also say that every email is signed {SIGN_OFF_PLACEHOLDER} and the sign-off must be filled in before the campaign
+is approved."""
+
+
+def instructions(budget: object, dry_run: bool, sender_name: Optional[str] = None) -> str:
+    # Layrcake campaigns have no sender variable, so the sign-off is written into each email.
+    name = (sender_name or "").strip()
     return f"""You run outbound prospecting with the Layrcake tools. Work from the user's one-sentence brief.
 
 1. Call find_leads once. Send audience (the brief in your own words) plus at least one of titles, industries,
@@ -33,4 +46,6 @@ Rules:
 - The whole run has a budget of {budget} credits. Each result reports credits_charged. If a call is refused
   for budget, stop and report what you have.
 - Never guess an email address. Never call a tool after launch_campaign.
-{DRY_RUN_NOTE if dry_run else ""}{REPORT}"""
+- End every email with this sign-off line, exactly as written: {name or SIGN_OFF_PLACEHOLDER}
+  Never sign as yourself or with a role, and never invent a name, title or company for the sender.
+{DRY_RUN_NOTE if dry_run else ""}{REPORT}{"" if name else PLACEHOLDER_REPORT}"""

@@ -17,10 +17,12 @@ from instructions import DEFAULT_BRIEF, instructions
 from layrcake_tools import TOOLS
 
 
-def build_agent(budget: Decimal, dry_run: bool, model: Optional[str] = None) -> Agent[AsyncLayrcakeSession]:
+def build_agent(
+    budget: Decimal, dry_run: bool, model: Optional[str] = None, sender_name: Optional[str] = None
+) -> Agent[AsyncLayrcakeSession]:
     return Agent[AsyncLayrcakeSession](
         name="Layrcake prospector",
-        instructions=instructions(budget, dry_run),
+        instructions=instructions(budget, dry_run, sender_name),
         model=model,  # None uses the Agents SDK default
         tools=list(TOOLS),
         tool_use_behavior=StopAtTools(stop_at_tool_names=["launch_campaign"]),  # stop at the approval link
@@ -54,7 +56,7 @@ async def main() -> None:
     )
     async with AsyncLayrcake() as client:  # reads LAYRCAKE_API_KEY
         run = AsyncLayrcakeSession(client, budget_credits=budget, dry_run=args.dry_run)
-        agent = build_agent(budget, args.dry_run, os.environ.get("MODEL"))
+        agent = build_agent(budget, args.dry_run, os.environ.get("MODEL"), os.environ.get("SENDER_NAME"))
         result = await Runner.run(agent, brief, context=run, max_turns=40, hooks=PrintToolCalls())
 
     if not run.approval_url and not run.launch_error:
