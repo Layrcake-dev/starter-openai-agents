@@ -76,22 +76,25 @@ With no brief, it uses the one above.
 Each tool call prints as it starts. The run ends with a short report from the run state:
 
 ```text
-Live run. Budget: 100 credits.
-Brief: Find 10 heads of sales at software companies in London ...
+Live run. Budget: 25 credits.
+Brief: Find 3 heads of sales at software companies in London with 20 to 200 staff, verify their work emails, and draft a short campaign about cutting time spent on lead research.
 
 -> find_leads
 -> enrich
+-> enrich
+-> enrich
 -> verify_email
-...
+-> verify_email
+-> verify_email
 -> create_campaign
 -> launch_campaign
 
-Found 10 people. Kept 7 verified emails (3 catch-all).
-Layrcake credits spent: 46.75 of 100.
+Found 10 people. Kept 3 verified emails (1 catch-all).
+Layrcake credits spent: 21.75 of 25.
 Nothing has been sent. A person approves or declines here: <approval link>
 ```
 
-These numbers are from our test run of the default brief on 20 October 2026. Your run will differ. A dry run ends with the model's cost estimate instead of a link.
+This is our test run on 20 October 2026, with `BUDGET=25`, the three-person brief above and `openai/gpt-5.6-luna` through OpenRouter. It took 40 seconds. The search returned 10 people and the agent enriched the 3 the brief asked for. Your run will differ. A dry run ends with the model's cost estimate instead of a link.
 
 ## How approval works
 
