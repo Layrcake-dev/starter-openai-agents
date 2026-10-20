@@ -14,13 +14,13 @@ It uses the [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) 
 
 ## Why the SDK for this kit
 
-The Agents SDK builds a tool from a typed Python function and its docstring with `@function_tool`. Wrapping the `layrcake` SDK in five such functions fits that model:
+The tools and their rules come from the `layrcake` SDK's `layrcake.agent_tools` module, the same code behind the LangChain, LlamaIndex and CrewAI packages. `layrcake_tools.py` hands five of them to the Agents SDK as `FunctionTool`s:
 
-- Each tool takes only the arguments this agent needs. `launch_campaign` has no `confirmation_token` argument, so the model cannot approve anything.
-- The run state travels in the run context (`RunContextWrapper[Run]`): the Layrcake client, the budget, what was spent, and which emails passed verification. The rules live in `layrcake_tools.py`. Every paid call gets `budget_credits` set to what is left of `BUDGET`. `--dry-run` adds `dry_run: true` to every call. `create_campaign` refuses any address that did not pass `verify_email` in this run.
-- `StopAtTools(stop_at_tool_names=["launch_campaign"])` ends the run at the approval link. `parallel_tool_calls=False` and a lock run one Layrcake call at a time, so the running total is exact.
-- A custom `failure_error_function` shows the model why a call was refused, such as a spent budget. The SDK's default hides the reason.
-- The SDK handles retries, typed errors and idempotency keys. The tools pass a key derived from the call, so a repeated call returns the first result instead of charging again. Credits are `Decimal`, never floats.
+- Each tool's name, description with its price, and strict JSON schema come from the SDK. `launch_campaign` has no `confirmation_token` argument, so the model cannot approve anything, and the token is removed from what the model reads.
+- The run state travels in the run context (`RunContextWrapper[AsyncLayrcakeSession]`): the Layrcake client, the budget, what was spent, and which emails passed verification. Every paid call gets `budget_credits` set to what is left of `BUDGET`. `--dry-run` adds `dry_run: true` to every call. `create_campaign` refuses any address that did not pass `verify_email` in this run.
+- `StopAtTools(stop_at_tool_names=["launch_campaign"])` ends the run at the approval link. `parallel_tool_calls=False` and the session's lock run one Layrcake call at a time, so the running total is exact.
+- A refused call, such as one past the budget, comes back to the model as text that starts with `Refused:` and says why, so it can fix the call or stop.
+- The SDK handles retries, typed errors and idempotency keys. The session passes a key derived from the call, so a repeated call returns the first result instead of charging again. Credits are `Decimal`, never floats.
 
 The hosted MCP server at `https://mcp.layrcake.dev/mcp` also works with the Agents SDK through `MCPServerStreamableHttp`. Function tools keep the schemas small and the guardrails in your code.
 
@@ -124,7 +124,7 @@ We ran this kit this way on 20 October 2026.
 
 ```text
 agent.py              the agent: model settings, stop rule, report
-layrcake_tools.py     the five Layrcake tools and the run state
+layrcake_tools.py     the five Layrcake tools, from layrcake.agent_tools
 instructions.py       the system prompt
 smoke.py              free setup check, no model call
 tests/test_tools.py   tool tests with a mocked Layrcake API
@@ -140,7 +140,9 @@ uv run mypy
 uv run pytest
 ```
 
-The tests give the `layrcake` client an `httpx.MockTransport`, and drive the agent with the Agents SDK's `ScriptedModel`. They need no keys and make no network calls.
+The tests give the `layrcake` client an `httpx.MockTransport`, and drive the agent with the Agents SDK's `ScriptedModel`. They need no keys and make no network calls. The run rules themselves are tested in the SDK.
+
+Until `layrcake` 0.2.0 is on PyPI, `[tool.uv.sources]` in `pyproject.toml` installs the SDK from a local checkout of [layrcake-python](https://github.com/Layrcake-dev/layrcake-python) at `../../layrcake-python`. Delete that table and run `uv lock` before publishing.
 
 ## Links
 

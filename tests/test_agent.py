@@ -6,13 +6,13 @@ from decimal import Decimal
 
 from agents import Runner
 from agents.testing import ScriptedModel, assistant_message, function_call
+from layrcake.agent_tools import AsyncLayrcakeSession
 
 from agent import build_agent
-from layrcake_tools import Run
 from tests.conftest import APPROVAL_URL, CAMPAIGN_ID, MockLayrcake
 
 
-async def test_agent_stops_at_the_approval_link(run: Run, api: MockLayrcake) -> None:
+async def test_agent_stops_at_the_approval_link(run: AsyncLayrcakeSession, api: MockLayrcake) -> None:
     lead = {"email": "ada@acme.com", "first_name": "Ada", "company_name": "Acme"}
     model = ScriptedModel(
         [
